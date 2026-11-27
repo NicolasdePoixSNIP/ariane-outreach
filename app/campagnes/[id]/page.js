@@ -32,6 +32,23 @@ export default async function Campagne({ params }) {
           <Link className="btn" href={`/nouvelle?id=${id}`}>{c.status === "to_validate" || c.status === "draft" ? "Modifier et valider" : "Modifier"}</Link>
         </div>
       </div>
+      {c.executor === "taches" || c.dryRun ? (
+        <div className="alert">
+          <span className="ai">i</span>
+          <div style={{ flex: 1 }}>
+            {c.executor === "taches" ? (
+              <><b>Envois réalisés par la tâche programmée.</b> L’application ne fait que suivre. Pour la basculer, lancez d’abord une simulation : le moteur indiquera chaque jour ce qu’il aurait fait, sans rien envoyer, pendant que la tâche continue.</>
+            ) : (
+              <><b>Simulation en cours.</b> Le moteur calcule ce qu’il ferait (journal dans Paramètres) sans rien envoyer. Pour passer en réel : désactivez la tâche, réimportez le fichier de suivi, puis cliquez sur « Passer en envoi réel ».{c.qualify ? <> Qualification : 2e niveau uniquement, Île-de-France, postes exclus (collaborateur, counsel, juriste…), cabinet de {c.qualify.maxHeadcount} personnes au plus ; {c.limits.invitesPerDay || "—"} invitations par jour.</> : null}</>
+            )}
+          </div>
+          <form action={`/api/campaigns/${id}/bascule`} method="post" style={{ display: "flex", gap: 8 }}>
+            {c.executor === "taches" ? <button className="btn pri" name="action" value="simuler">Simuler la bascule</button> : (
+              <><button className="btn pri" name="action" value="reel">Passer en envoi réel</button><button className="btn" name="action" value="taches">Rendre à la tâche</button></>
+            )}
+          </form>
+        </div>
+      ) : null}
       <div className="grid4" style={{ gridTemplateColumns: "repeat(auto-fit,minmax(200px,1fr))" }}>
         <div className="card"><div className="kl">Avancement</div><div className="kv">{fmt(contacted)} / {fmt(c.size)}</div><div className="bar" style={{ marginTop: 8 }}><span style={{ width: `${n(c.size) ? Math.round((contacted * 100) / n(c.size)) : 0}%` }} /></div></div>
         <div className="card"><div className="kl">Invitations acceptées</div><div className="kv">{pct(s.accepted, s.invites)}</div><div className="ks">{fmt(s.accepted)} sur {fmt(s.invites)} invitations · {fmt(s.withdrawn)} retirées</div></div>
