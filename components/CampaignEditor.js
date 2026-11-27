@@ -426,9 +426,9 @@ function Cible({ c, set, setC, locked, sourceKey, chooseSource, preview, refresh
           </div>
           <div className="form-row">
             <div><label className="lbl">Écarter les titres contenant</label><input className="field" disabled={locked} value={c.qualify?.titleExclude || ""} onChange={(e) => set("qualify.titleExclude", e.target.value)} /></div>
-            <div><label className="lbl">Taille maximale du cabinet (0 = sans limite)</label><input className="field" type="number" min="0" disabled={locked} value={c.qualify?.maxHeadcount || 0} onChange={(e) => set("qualify.maxHeadcount", Number(e.target.value))} /></div>
+            <div><label className="lbl">Effectif maximal du cabinet, en nombre de personnes (0 = sans limite)</label><input className="field" type="number" min="0" disabled={locked} value={c.qualify?.maxHeadcount || 0} onChange={(e) => set("qualify.maxHeadcount", Number(e.target.value))} /></div>
           </div>
-          <p className="note" style={{ margin: 0 }}>Vérifié par le moteur au moment d’inviter : les personnes déjà en relation sont toujours écartées. La taille du cabinet demande une lecture de profil par contact (quota d’environ 100 par jour).</p>
+          <p className="note" style={{ margin: 0 }}>Vérifié par le moteur au moment d’inviter : les personnes déjà en relation sont toujours écartées. L’effectif est celui affiché sur la page LinkedIn du cabinet (salariés déclarés sur LinkedIn, associés compris), pas le chiffre d’affaires. Le vérifier demande une lecture de profil par contact (quota d’environ 100 par jour).</p>
         </div>
       ) : null}
 
@@ -439,9 +439,59 @@ function Cible({ c, set, setC, locked, sourceKey, chooseSource, preview, refresh
           <div><div className="kl">Retenus</div><b style={{ fontSize: 22 }}>{preview.retained}</b></div>
           <div><div className="kl">Avec email</div><b style={{ fontSize: 22 }}>{preview.withEmail}</b></div>
           <div><div className="kl">Avec LinkedIn</div><b style={{ fontSize: 22 }}>{preview.withLinkedin}</b></div>
-          <div className="note" style={{ flex: "1 1 240px" }}>Écartés : {preview.reasons.exclus} exclus ou déjà en campagne, {preview.reasons.recemment} contactés récemment, {preview.reasons.canal} sans canal utilisable, {preview.reasons.filtres} hors filtres.</div>
+          <div className="note" style={{ flex: "1 1 240px" }}>Écartés : {preview.reasons.exclus} exclus ou déjà en campagne, {preview.reasons.recemment} contactés récemment, {preview.reasons.canal} sans canal utilisable, {preview.reasons.filtres} hors filtres{preview.reasons.retires ? `, ${preview.reasons.retires} retirés à la main` : ""}.</div>
         </>) : null}
       </div>
+
+      {preview?.list?.length ? <Liste preview={preview} c={c} setC={setC} locked={locked} refresh={refresh} /> : null}
+    </div>
+  );
+}
+
+const NIV = { FIRST_DEGREE: "1er", SECOND_DEGREE: "2e", THIRD_DEGREE: "3e", OUT_OF_NETWORK: "hors réseau" };
+
+function Liste({ preview, c, setC, locked, refresh }) {
+  const [q, setQ] = useState("");
+  const [n, setN] = useState(50);
+  const rows = preview.list.filter((x) => !q || `${x.nom} ${x.titre} ${x.cabinet} ${x.ville}`.toLowerCase().includes(q.toLowerCase()));
+  const removed = c.audience.removed || [];
+  function remove(id) {
+    const next = { ...c, audience: { ...c.audience, removed: [...new Set([...removed, id])] } };
+    setC(next);
+    refresh(next);
+  }
+  function restoreAll() {
+    const next = { ...c, audience: { ...c.audience, removed: [] } };
+    setC(next);
+    refresh(next);
+  }
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+      <div style={{ display: "flex", gap: 12, alignItems: "center", flexWrap: "wrap" }}>
+        <h3 style={{ margin: 0, fontSize: 16 }}>Personnes retenues ({preview.retained})</h3>
+        <input className="field" style={{ maxWidth: 280 }} value={q} onChange={(e) => setQ(e.target.value)} placeholder="Filtrer par nom, titre, cabinet, ville" />
+        {removed.length && !locked ? <button className="btn" type="button" onClick={restoreAll}>Remettre les {removed.length} retirés</button> : null}
+      </div>
+      <div className="scroll" style={{ maxHeight: 460, overflow: "auto" }}>
+        <table className="tbl">
+          <thead><tr><th>Nom</th><th>Titre</th><th>Cabinet</th><th>Ville</th><th>Canaux</th>{c.type !== "email" ? <th>Niveau</th> : null}{!locked ? <th /> : null}</tr></thead>
+          <tbody>
+            {rows.slice(0, n).map((x) => (
+              <tr key={x.id}>
+                <td><b>{x.linkedin ? <a href={x.linkedin} target="_blank" rel="noreferrer" style={{ color: "#1E293B" }}>{x.nom || "—"}</a> : x.nom || "—"}</b></td>
+                <td className="sm">{x.titre.slice(0, 80)}</td>
+                <td className="sm">{x.cabinet}</td>
+                <td className="sm">{x.ville}</td>
+                <td className="sm">{[x.email && "mail", x.linkedin && "LinkedIn"].filter(Boolean).join(" + ")}</td>
+                {c.type !== "email" ? <td className="sm">{NIV[x.niveau] || "—"}</td> : null}
+                {!locked ? <td><button className="btn" type="button" style={{ minHeight: 32, padding: "0 12px", fontSize: 13 }} onClick={() => remove(x.id)}>Retirer</button></td> : null}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      {rows.length > n ? <div><button className="btn" type="button" onClick={() => setN(n + 100)}>Afficher 100 de plus ({rows.length - n} restants)</button></div> : null}
+      <p className="note" style={{ margin: 0 }}>Liste avant qualification : au moment d’inviter, le moteur écarte encore ceux qui ne passent pas les règles ci-dessus. « Retirer » sort la personne de cette campagne seulement, elle reste dans la base.</p>
     </div>
   );
 }
