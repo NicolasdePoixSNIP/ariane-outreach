@@ -1,8 +1,12 @@
-export default function Nouvelle() {
-  return (
-    <>
-      <div className="top"><div><p className="eye">Nouvelle campagne</p><h1>Concepteur de campagne</h1><p className="lead">Audience, séquence multicanal, textes, rythme et validation unique.</p></div></div>
-      <div className="empty"><b>En cours de développement</b>Cet écran arrive à l’étape 2, avec le moteur d’envoi quotidien.</div>
-    </>
-  );
+import CampaignEditor from "@/components/CampaignEditor";
+import { getCampaign } from "@/lib/campaigns";
+import { redisConfigured } from "@/lib/redis";
+
+export const dynamic = "force-dynamic";
+
+export default async function Nouvelle({ searchParams }) {
+  const sp = await searchParams;
+  const initial = sp?.id && redisConfigured ? await getCampaign(sp.id) : null;
+  if (initial) delete initial.stats;
+  return <CampaignEditor initial={initial} />;
 }

@@ -18,10 +18,10 @@ export default async function Campagnes() {
           <table className="tbl">
             <thead><tr><th>Campagne</th><th>Métier</th><th>Contacts</th><th>Statut</th></tr></thead>
             <tbody>{campaigns.map((c) => (
-              <tr key={c.id}><td><b>{c.name}</b></td><td>{professionLabel(c.profession)}</td><td>{fmt(c.size)}</td><td><StatusPill status={c.status} /></td></tr>
+              <tr key={c.id}><td><Link href={`/campagnes/${c.id}`} style={{ fontWeight: 700, color: "#1E293B" }}>{c.name}</Link></td><td>{professionLabel(c.profession)}</td><td>{fmt(c.size)}</td><td><StatusPill status={c.status} /></td></tr>
             ))}</tbody>
           </table>
-        ) : <div className="empty"><b>Aucune campagne</b>Le concepteur arrive à l’étape suivante du développement.</div>}
+        ) : <div className="empty"><b>Aucune campagne</b>Créez la première avec « Nouvelle campagne ».</div>}
       </div>
     </>
   );

@@ -78,7 +78,7 @@ export default async function Dashboard() {
             </table>
           </div>
         ) : (
-          <div className="empty"><b>Aucune campagne pour l’instant</b>Le concepteur de campagne arrive à l’étape suivante du développement.</div>
+          <div className="empty"><b>Aucune campagne pour l’instant</b><Link href="/nouvelle">Créer la première campagne</Link></div>
         )}
       </div>
 
