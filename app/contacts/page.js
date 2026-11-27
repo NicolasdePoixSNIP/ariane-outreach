@@ -6,7 +6,7 @@ import { contactCounts, listContacts, PROFESSIONS, professionLabel } from "@/lib
 
 export const dynamic = "force-dynamic";
 
-const STATUT = { nouveau: ["Nouveau", "p-draft"], en_campagne: ["En séquence", "p-val"], stop: ["Stop", "p-risk"], client: ["Client", "p-on"] };
+const STATUT = { nouveau: ["Nouveau", "p-draft"], en_campagne: ["En séquence", "p-val"], contacte: ["Contacté", "p-draft"], repondu: ["A répondu", "p-on"], stop: ["Stop", "p-risk"], client: ["Client", "p-on"] };
 
 export default async function Contacts({ searchParams }) {
   const sp = await searchParams;
@@ -25,7 +25,7 @@ export default async function Contacts({ searchParams }) {
           <h1>{fmt(counts?.total)} contacts</h1>
           <p className="lead">Une seule base pour toutes les professions, dédoublonnée par email et profil LinkedIn.</p>
         </div>
-        <div className="btns"><Link className="btn pri" href="/contacts/import"><Icon name="upload" />Importer des contacts</Link></div>
+        <div className="btns"><Link className="btn" href="/contacts/import-linkedin">Reprendre le suivi LinkedIn</Link><Link className="btn pri" href="/contacts/import"><Icon name="upload" />Importer des contacts</Link></div>
       </div>
       {!redisConfigured ? <SetupNeeded /> : null}
       <div className="cols">

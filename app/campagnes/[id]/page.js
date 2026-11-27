@@ -23,7 +23,7 @@ export default async function Campagne({ params }) {
         <div>
           <p className="eye">Campagne · {professionLabel(c.profession)}</p>
           <h1>{c.name}</h1>
-          <p className="lead">{c.validatedAt ? `Validée le ${new Date(c.validatedAt).toLocaleDateString("fr-FR")}` : "Pas encore validée"} · début le {new Date(`${c.startDate}T12:00:00`).toLocaleDateString("fr-FR")}{c.pauseReason ? ` · en pause : ${c.pauseReason}` : ""}</p>
+          <p className="lead">{c.validatedAt ? `Validée le ${new Date(c.validatedAt).toLocaleDateString("fr-FR")}` : "Pas encore validée"} · début le {new Date(`${c.startDate}T12:00:00`).toLocaleDateString("fr-FR")}{c.pauseReason ? ` · en pause : ${c.pauseReason}` : ""}{c.executor === "taches" ? " · envois réalisés par les tâches programmées (suivi repris du fichier Prospection_LinkedIn.csv)" : ""}</p>
         </div>
         <div className="btns" style={{ alignItems: "center" }}>
           <StatusPill status={c.status} />
