@@ -7,7 +7,7 @@ const PROFS = [
   ["avocat", "Avocats"], ["expert-comptable", "Experts-comptables"], ["notaire", "Notaires"],
   ["cgp", "CGP"], ["banquier-prive", "Banquiers privés"], ["autre", "Autres"],
 ];
-const FIELDS = { email: "Email", prenom: "Prénom", nom: "Nom", cabinet: "Cabinet", ville: "Ville", titre: "Titre", linkedin: "LinkedIn", profession: "Métier" };
+const FIELDS = { email: "Email", prenom: "Prénom", nom: "Nom", cabinet: "Cabinet", ville: "Ville", titre: "Titre", linkedin: "LinkedIn", profession: "Métier", dernier_contact: "Dernier contact" };
 
 export default function Import() {
   const [rows, setRows] = useState(null);
