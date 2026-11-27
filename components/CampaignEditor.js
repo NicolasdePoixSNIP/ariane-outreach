@@ -325,6 +325,8 @@ function Cible({ c, set, setC, locked, sourceKey, chooseSource, preview, refresh
       if (!r.ok) throw new Error(j.error);
       setCursor(j.nextCursor || null);
       attach(j);
+      // le niveau et la zone sont déjà filtrés par la recherche : on ne les redemande pas en qualification
+      setC((p) => ({ ...p, qualify: { ...p.qualify, secondDegreeOnly: false, locations: "", allowFirstDegree: sourceKey === "recherche" ? crit.degrees.includes(1) : p.qualify.allowFirstDegree } }));
     } catch (e) { setMsg({ err: e.message }); } finally { setBusy(""); }
   }
 
@@ -386,7 +388,7 @@ function Cible({ c, set, setC, locked, sourceKey, chooseSource, preview, refresh
             </div>
             <div>
               <label className="lbl">Niveau de relation</label>
-              <div className="chips">{[[2, "2e niveau"], [3, "3e et +"]].map(([v, l]) => (
+              <div className="chips">{[[1, "1er (déjà en relation)"], [2, "2e"], [3, "3e et +"]].map(([v, l]) => (
                 <label key={v} style={{ display: "flex", gap: 6, alignItems: "center", fontSize: 14, marginRight: 12 }}><input type="checkbox" checked={crit.degrees.includes(v)} onChange={(e) => setCrit({ ...crit, degrees: e.target.checked ? [...crit.degrees, v] : crit.degrees.filter((x) => x !== v) })} />{l}</label>
               ))}</div>
             </div>
@@ -420,10 +422,15 @@ function Cible({ c, set, setC, locked, sourceKey, chooseSource, preview, refresh
       {hasLi ? (
         <div style={{ borderTop: "1px solid #E2E8F0", paddingTop: 16, display: "flex", flexDirection: "column", gap: 12 }}>
           <p className="lbl" style={{ margin: 0 }}>Qualification avant invitation</p>
-          <div className="form-row">
-            <label style={{ display: "flex", gap: 10, alignItems: "center", fontSize: 14 }}><input type="checkbox" disabled={locked} checked={Boolean(c.qualify?.secondDegreeOnly)} onChange={(e) => set("qualify.secondDegreeOnly", e.target.checked)} />Relations de 2e niveau uniquement</label>
-            <div><label className="lbl">Zone (vide = partout)</label><input className="field" disabled={locked} value={c.qualify?.locations || ""} onChange={(e) => set("qualify.locations", e.target.value)} placeholder="Paris, Île-de-France, Hauts-de-Seine" /></div>
-          </div>
+          {sourceKey === "base" || sourceKey === "fichier" ? (
+            <div className="form-row">
+              <label style={{ display: "flex", gap: 10, alignItems: "center", fontSize: 14 }}><input type="checkbox" disabled={locked} checked={Boolean(c.qualify?.secondDegreeOnly)} onChange={(e) => set("qualify.secondDegreeOnly", e.target.checked)} />Relations de 2e niveau uniquement</label>
+              <div><label className="lbl">Zone (vide = partout)</label><input className="field" disabled={locked} value={c.qualify?.locations || ""} onChange={(e) => set("qualify.locations", e.target.value)} placeholder="Paris, Île-de-France, Hauts-de-Seine" /></div>
+            </div>
+          ) : (
+            <p className="note" style={{ margin: 0 }}>Niveau de relation et zone : déjà appliqués par la recherche LinkedIn, inutile de les redemander.</p>
+          )}
+          <label style={{ display: "flex", gap: 10, alignItems: "center", fontSize: 14 }}><input type="checkbox" disabled={locked} checked={Boolean(c.qualify?.allowFirstDegree)} onChange={(e) => set("qualify.allowFirstDegree", e.target.checked)} />Relations de 1er niveau : pas d’invitation, envoyer directement le message (sinon elles sont écartées)</label>
           <div className="form-row">
             <div><label className="lbl">Écarter les titres contenant</label><input className="field" disabled={locked} value={c.qualify?.titleExclude || ""} onChange={(e) => set("qualify.titleExclude", e.target.value)} /></div>
             <div><label className="lbl">Effectif maximal du cabinet, en nombre de personnes (0 = sans limite)</label><input className="field" type="number" min="0" disabled={locked} value={c.qualify?.maxHeadcount || 0} onChange={(e) => set("qualify.maxHeadcount", Number(e.target.value))} /></div>
@@ -446,6 +453,13 @@ function Cible({ c, set, setC, locked, sourceKey, chooseSource, preview, refresh
       {preview?.list?.length ? <Liste preview={preview} c={c} setC={setC} locked={locked} refresh={refresh} /> : null}
     </div>
   );
+}
+
+function Avatar({ x }) {
+  const [err, setErr] = useState(false);
+  const ini = (x.nom || "?").split(/\s+/).map((w) => w[0]).slice(0, 2).join("").toUpperCase();
+  const st = { width: 40, height: 40, borderRadius: 99, flex: "0 0 40px", objectFit: "cover", background: "#EEF1FD", color: "#3445B6", display: "grid", placeItems: "center", fontSize: 13, fontWeight: 700 };
+  return x.photo && !err ? <img src={x.photo} alt="" style={st} referrerPolicy="no-referrer" onError={() => setErr(true)} /> : <span style={st}>{ini}</span>;
 }
 
 const NIV = { FIRST_DEGREE: "1er", SECOND_DEGREE: "2e", THIRD_DEGREE: "3e", OUT_OF_NETWORK: "hors réseau" };
@@ -478,7 +492,7 @@ function Liste({ preview, c, setC, locked, refresh }) {
           <tbody>
             {rows.slice(0, n).map((x) => (
               <tr key={x.id}>
-                <td><b>{x.linkedin ? <a href={x.linkedin} target="_blank" rel="noreferrer" style={{ color: "#1E293B" }}>{x.nom || "—"}</a> : x.nom || "—"}</b></td>
+                <td><div style={{ display: "flex", gap: 10, alignItems: "center" }}><Avatar x={x} /><b>{x.linkedin ? <a href={x.linkedin} target="_blank" rel="noreferrer" style={{ color: "#1E293B" }}>{x.nom || "—"}</a> : x.nom || "—"}</b></div></td>
                 <td className="sm">{x.titre.slice(0, 80)}</td>
                 <td className="sm">{x.cabinet}</td>
                 <td className="sm">{x.ville}</td>

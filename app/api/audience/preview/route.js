@@ -19,7 +19,7 @@ export async function POST(req) {
       sample: { name: [sample.prenom, sample.nom].filter(Boolean).join(" "), cabinet: sample.cabinet },
       list: contacts.slice(0, Math.min(Number(c.audience.max) || 300, 500)).map((x) => ({
         id: x.id, nom: [x.prenom, x.nom].filter(Boolean).join(" "), titre: x.titre || "", cabinet: x.cabinet || "", ville: x.ville || "",
-        email: Boolean(x.email), linkedin: x.linkedin || "", niveau: x.li_niveau || "",
+        email: Boolean(x.email), linkedin: x.linkedin || "", niveau: x.li_niveau || "", photo: x.li_photo || "",
       })),
       removed: (c.audience.removed || []).length,
       previews: c.steps.map((s) => ({ subject: render(s.subject, sample), text: render(s.text, sample) })),
