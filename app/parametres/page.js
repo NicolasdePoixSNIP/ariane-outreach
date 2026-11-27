@@ -13,7 +13,8 @@ const Row = ({ label, ok, detail }) => (
   </tr>
 );
 
-export default async function Parametres() {
+export default async function Parametres(props) {
+  const searchParams = await props.searchParams;
   let accounts = [], unipileError = "";
   if (unipileConfigured) {
     try {
@@ -25,6 +26,8 @@ export default async function Parametres() {
   }
   const mode = redisConfigured ? (await redis.get("cfg:engine")) || "simulation" : "simulation";
   const last = redisConfigured ? await redis.get("engine:last") : null;
+  const webhookId = redisConfigured ? await redis.get("cfg:webhookId") : null;
+  const wh = searchParams?.webhook;
   const MODES = [["off", "Arrêté", "Rien n’est envoyé ni synchronisé."], ["simulation", "Simulation", "Le moteur calcule ce qu’il enverrait, sans rien envoyer."], ["on", "En marche", "Envois réels chaque jour ouvré à 8 h 35."]];
   return (
     <>
@@ -53,7 +56,15 @@ export default async function Parametres() {
           <Row label="Base de données Upstash" ok={redisConfigured} detail={redisConfigured ? "Contacts, campagnes et événements" : "Ajouter Upstash Redis dans Vercel, onglet Storage"} />
           <Row label="Tâche quotidienne (Vercel Cron)" ok={Boolean(process.env.CRON_SECRET)} detail={process.env.CRON_SECRET ? "Chaque jour ouvré à 8 h 35 (heure de Paris en hiver)" : "Variable CRON_SECRET manquante"} />
           <Row label="API Unipile" ok={unipileConfigured && !unipileError} detail={unipileError || (unipileConfigured ? `${accounts.length} compte(s) visibles` : "Variable UNIPILE_API_KEY manquante")} />
+          <Row label="Suivi des ouvertures de mails" ok={Boolean(webhookId)} detail={webhookId ? "Unipile signale chaque ouverture ; les robots sont écartés du taux d’accroche" : "Pas encore activé"} />
         </tbody></table>
+        {!webhookId ? (
+          <form action="/api/webhooks/setup" method="post" style={{ marginTop: 14 }}>
+            <button className="btn pri" type="submit">Activer le suivi des ouvertures</button>
+            <p className="note" style={{ marginTop: 8 }}>Déclare chez Unipile l’adresse qui reçoit les ouvertures de vos mails. À faire une seule fois.</p>
+          </form>
+        ) : null}
+        {wh && wh !== "ok" && wh !== "deja" ? <p className="note" style={{ color: "#B91C1C" }}>Activation impossible : {wh}</p> : null}
       </div>
       {accounts.length ? (
         <div className="card">

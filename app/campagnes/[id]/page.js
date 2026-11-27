@@ -5,6 +5,7 @@ import { StatusPill, fmt, pct, n } from "@/components/ui";
 import { getCampaign, campaignMembers, STEP_TYPES } from "@/lib/campaigns";
 import { professionLabel } from "@/lib/store";
 import { redis } from "@/lib/redis";
+import { hook } from "@/lib/metrics";
 
 export const dynamic = "force-dynamic";
 
@@ -31,11 +32,12 @@ export default async function Campagne({ params }) {
           <Link className="btn" href={`/nouvelle?id=${id}`}>{c.status === "to_validate" || c.status === "draft" ? "Modifier et valider" : "Modifier"}</Link>
         </div>
       </div>
-      <div className="grid4">
+      <div className="grid4" style={{ gridTemplateColumns: "repeat(auto-fit,minmax(200px,1fr))" }}>
         <div className="card"><div className="kl">Avancement</div><div className="kv">{fmt(contacted)} / {fmt(c.size)}</div><div className="bar" style={{ marginTop: 8 }}><span style={{ width: `${n(c.size) ? Math.round((contacted * 100) / n(c.size)) : 0}%` }} /></div></div>
         <div className="card"><div className="kl">Invitations acceptées</div><div className="kv">{pct(s.accepted, s.invites)}</div><div className="ks">{fmt(s.accepted)} sur {fmt(s.invites)} invitations · {fmt(s.withdrawn)} retirées</div></div>
         <div className="card"><div className="kl">Réponses</div><div className="kv">{fmt(s.replies)}</div><div className="ks">{pct(s.replies, contacted)} des contactés · {fmt(s.stops)} « stop »</div></div>
-        <div className="card"><div className="kl">Mails</div><div className="kv">{fmt(s.emails)}</div><div className="ks">{fmt(s.bounces)} en échec ({pct(s.bounces, s.emails)})</div></div>
+        <div className="card"><div className="kl">Mails · ouvertures</div><div className="kv">{pct(s.opens, s.mailed)}</div><div className="ks">{fmt(s.opens)} ouverts sur {fmt(s.mailed)} contacts · {fmt(s.bounces)} en échec · {fmt(s.botOpens)} ouvertures robots écartées</div></div>
+        <div className="card"><div className="kl">Taux d’accroche</div><div className="kv">{(() => { const h = hook({ accepted: n(s.accepted), opens: n(s.opens), invites: n(s.invites), mailed: n(s.mailed) }); return pct(h.num, h.den); })()}</div><div className="ks">Acceptations + ouvertures, rapportées aux invitations + 1ers mails</div></div>
       </div>
       <div className="cols">
         <div className="card" style={{ flex: "2 1 560px" }}>

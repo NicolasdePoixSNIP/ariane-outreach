@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { COOKIE, sessionToken } from "./lib/auth";
 
-const PUBLIC = ["/login", "/api/login", "/api/cron"];
+const PUBLIC = ["/login", "/api/login", "/api/cron", "/api/webhooks/unipile"];
 
 export async function middleware(req) {
   const { pathname } = req.nextUrl;
