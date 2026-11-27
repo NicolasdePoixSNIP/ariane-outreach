@@ -12,6 +12,7 @@ export async function POST(req) {
     const exclusion = body.exclusion === "client" ? "client" : "stop";
     const source = String(body.source || "import").slice(0, 60);
     const res = await upsertContacts(rows, { profession, source, mode, exclusion });
+    delete res.ids;
     return NextResponse.json(res);
   } catch (e) {
     return NextResponse.json({ error: e.message }, { status: 500 });
